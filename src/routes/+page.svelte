@@ -150,8 +150,8 @@
 		{#key currentImage}
 			<Scene
 				bind:isCalibrated
-				image={'/images/' + images[currentImage]}
-				depth={'/images/' + depth[currentImage]}
+				image={'/image2fake3d/images/' + images[currentImage]}
+				depth={'/image2fake3d/images/' + depth[currentImage]}
 			/>
 		{/key}
 	</Canvas>
