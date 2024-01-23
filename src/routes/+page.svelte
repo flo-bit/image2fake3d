@@ -145,9 +145,9 @@
 		</div>
 	{:else}
 		<div class="fixed bottom-0 text-neutral-200 w-full flex justify-center text-xs">
-			<!-- <div class="px-3 py-1.5 bg-black/50 font-semibold rounded-t-md text-center">
+			<div class="px-3 py-1.5 bg-black/50 font-semibold rounded-t-md text-center">
 				{useMotion ? 'tilt phone' : 'move mouse'} to see effect <br> {useMotion ? 'swipe' : 'arrow keys'} to change image
-			</div> -->
+			</div>
 		</div>
 		<div class="fixed bottom-0 text-neutral-200 font-semibold w-full flex justify-between text-xs">
 			{#if useMotion}
