@@ -11,12 +11,12 @@ const folderPath = '/image2fake3d/images/';
 
 export const presetImages: DepthImage[] = [
 	{
-		image: folderPath + 'forest.png',
-		depth: folderPath + 'forest-depth.png'
-	},
-	{
 		image: folderPath + 'lion.png',
 		depth: folderPath + 'lion-depth.png'
+	},
+	{
+		image: folderPath + 'forest.png',
+		depth: folderPath + 'forest-depth.png'
 	},
 	{
 		image: folderPath + 'architecture.png',
