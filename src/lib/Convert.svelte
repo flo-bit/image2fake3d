@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { Pydnet } from "./model";
-	import { currentImageIndex, customImages, isRunning, showMenu, useCustomImage } from "$lib/store";
-
 	let isDragging = false;
 
 	let input: HTMLInputElement;
@@ -14,7 +10,7 @@
 		const file = files?.[0];
 
 		if (file) {
-			runInference(file);
+			selectedFile(file);
 		}
 	}
 
@@ -36,112 +32,23 @@
 		}
 	}
 
-	let model: Pydnet | null = null;
+	export let selectedFile = (file: File) => {};
 
-	onMount(async () => {
-		if (!('createImageBitmap' in window)) {
-			// @ts-ignore
-			window.createImageBitmap = async function (data: ImageData) {
-				return new Promise((resolve, reject) => {
-					let dataURL;
-					const canvas = document.createElement('canvas');
-					const ctx = canvas.getContext('2d');
-					if(!ctx) throw new Error('Context not found');
-					canvas.width = data.width;
-					canvas.height = data.height;
-					ctx.putImageData(data, 0, 0);
-					dataURL = canvas.toDataURL();
-
-					const img = document.createElement('img');
-					img.addEventListener('load', function () {
-						resolve(this);
-					});
-					img.src = dataURL;
-				});
-			};
-		}
-
-		model = await new Pydnet().init();
-	});
-
-	async function runInference(file: File) {
-		var fr = new FileReader();
-		fr.onload = function () {
-			var img = new Image();
-			img.onload = function () {
-				display_result(img);
-			};
-			if(fr.result === null || typeof fr.result !== 'string') throw new Error('Result not found');
-			img.src = fr.result;
-		};
-
-		fr.readAsDataURL(file);
-	}
-
-	async function display_result(img: HTMLImageElement) {
-		if(!model) throw new Error('Model not loaded');
-		var results = await model.predict(img);
-
-		let canvas = document.createElement('canvas');
-		let ctx = canvas.getContext('2d');
-		canvas.width = img.width;
-		canvas.height = img.height;
-
-		let inputCanvas = document.createElement('canvas');
-		let inputCtx = inputCanvas.getContext('2d');
-		inputCanvas.width = img.width;
-		inputCanvas.height = img.height;
-		if(inputCtx) inputCtx.drawImage(img, 0, 0);
-
-		let buffer = new Uint8ClampedArray(model.width * model.height * 4);
-		let i = 0;
-		for (let y = 0; y < model.height; y++) {
-			for (let x = 0; x < model.width; x++) {
-				let index = y * model.width + x;
-				let depth = results[0][index];
-				buffer[i] = depth;
-				buffer[i + 1] = depth;
-				buffer[i + 2] = depth;
-				buffer[i + 3] = 255.0;
-				i += 4;
-			}
-		}
-
-		const imageData = new ImageData(buffer, model.width, model.height);
-		const renderer = await createImageBitmap(imageData);
-		if(!ctx) throw new Error('Context not found');
-		ctx.drawImage(renderer, 0, 0, img.width, img.height);
-
-		setTimeout(function () {
-			$isRunning = true;
-			$showMenu = false;
-
-			$customImages = [
-				...$customImages,
-				{
-					image: inputCanvas.toDataURL(),
-					depth: canvas.toDataURL(),
-				}
-			];
-			$currentImageIndex = $customImages.length - 1;
-
-			$useCustomImage = true;
-		}, 350);
-	}
+	export let text = 'No file added';
 </script>
 
 <div>
 	<label
 		for={data?.innerText.toLowerCase()}
 		bind:this={data}
-		class="block text-lg my-2 font-medium leading-6 text-neutral-900 dark:text-white"
+		class="block text-lg my-2 font-medium leading-6 text-white"
 		><slot>Try it with your image</slot></label
 	>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="flex flex-col">
 		<button
 			type="button"
-			class="mt-2 flex flex-col justify-center items-center rounded-lg border border-dashed border-neutral-900/25 dark:border-neutral-100/25 px-1 py-10 relative overflow-hidden h-40 w-full hover:bg-black/5 dark:hover:bg-white/5 {isDragging
+			class="mt-2 flex flex-col justify-center items-center rounded-lg border border-dashed border-neutral-100/25 px-1 py-10 relative overflow-hidden h-40 w-full hover:bg-white/5  {isDragging
 				? 'bg-black/5 dark:bg-white/5'
 				: ''}"
 			on:dragover|preventDefault={handleDragOver}
@@ -162,14 +69,14 @@
 						clip-rule="evenodd"
 					/>
 				</svg>
-				<p class="text-sm leading-6 text-neutral-300 dark:text-neutral-400">No file added</p>
+				<p class="text-sm leading-6 text-neutral-300">{text}</p>
 			
 		</button>
 		<div class="text-center">
-			<div class="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-300">
+			<div class="mt-2 text-sm flex leading-6 text-neutral-300 dark:text-neutral-300 justify-center">
 				<label
 					for={data?.innerText.toLowerCase()}
-					class="relative cursor-pointer rounded-md font-semibold text-accent-600 dark:text-accent-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-accent-600 focus-within:ring-offset-2 hover:text-accent-500 dark:hover:text-accent-400"
+					class="relative cursor-pointer rounded-md font-semibold text-neutral-200 dark:text-neutral-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-accent-600 focus-within:ring-offset-2 hover:text-accent-500 dark:hover:text-accent-400"
 				>
 					<button type="button" on:click={() => input.click()}>Browse files</button>
 
@@ -184,9 +91,9 @@
 					/>
 				</label>
 
-				<p class="">or drag and drop</p>
-				<p class="pt-2 text-xs">Your image stays on your device</p>
+				<p class="ml-1">or drag and drop</p>
 			</div>
+			<p class="pt-2 text-xs text-neutral-200">Your image stays on your device<br>On device depth estimation is currently broken for some images on iOS</p>
 		</div>
 	</div>
 </div>
